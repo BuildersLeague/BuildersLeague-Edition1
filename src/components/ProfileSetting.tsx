@@ -168,17 +168,19 @@ export const ProfileSetting = ({ initialProfile }: ProfileSettingProps) => {
       })
 
       if (result.error) {
+        toast.dismiss() // Clear loading toast first
         toast.error(result.error)
       } else if (result.url) {
         setFileContent(result.url)
+        toast.dismiss() // Clear loading toast first
         toast.success('Profile image updated successfully!')
         router.refresh()
       }
     } catch (error) {
+      toast.dismiss() // Clear loading toast first
       toast.error('Failed to upload image')
     } finally {
       setModalOpen(false)
-      toast.dismiss()
     }
   }
 
