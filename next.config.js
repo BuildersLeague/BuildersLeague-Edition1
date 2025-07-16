@@ -47,7 +47,7 @@ const nextConfig = {
   ],
   images: {
     remotePatterns: [
-      {
+      /*{
         protocol: 'https',
         hostname: `${supabaseProjectId}.supabase.co`,
         pathname: '/storage/v1/object/public/**',
@@ -57,13 +57,15 @@ const nextConfig = {
         hostname: 'buildersleague.payloadcms.app',
       },
       {
-        protocol: 'http',
-        hostname: 'localhost',
+       protocol: 'http',
+       hostname: 'localhost',
       },
+      
       {
         protocol: 'http',
         hostname: process.env.CMS_DOMAIN,
       },
+      */
     ],
   },
   experimental: {
