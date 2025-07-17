@@ -13,70 +13,71 @@ const SurveyPage = () => {
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [surveys, setSurveys] = useState<Survey[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedSurveys, setSelectedSurveys] = useState<number[]>([])
+  const [surveyStatuses, setSurveyStatuses] = useState<Record<number, boolean>>({})
+
   const supabase = createBrowserClient()
   const itemsPerPage = 5
-
-  const [surveyStatuses, setSurveyStatuses] = useState<Record<number, boolean>>(
-    {},
-  )
 
   useEffect(() => {
     async function fetchSurveys() {
       const { data, error } = await supabase.from('survey').select('*')
-
       if (error) {
         console.error('Error fetching surveys:', error)
       } else {
         setSurveys(data as any)
       }
     }
-
     fetchSurveys()
   }, [])
 
-  const [selectedSurveys, setSelectedSurveys] = useState<number[]>([])
+  useEffect(() => {
+    if (surveys.length > 0) {
+      setSurveyStatuses(
+        surveys.reduce(
+          (acc, survey) => ({ ...acc, [survey.id]: survey.status }),
+          {},
+        )
+      )
+    }
+  }, [surveys])
+
+  const filteredSurveys = useMemo(() => {
+    const term = searchTerm.toLowerCase()
+    return surveys.filter((survey) =>
+      survey.link?.toLowerCase().includes(term) ||
+      survey.organization_id?.toString().toLowerCase().includes(term) ||
+      survey.created_at?.toLowerCase().includes(term)
+    )
+  }, [surveys, searchTerm])
+
+  const paginatedSurveys = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredSurveys.slice(startIndex, startIndex + itemsPerPage)
+  }, [currentPage, filteredSurveys])
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredSurveys.length / itemsPerPage))
+  }, [filteredSurveys])
 
   const handleStatusChange = async (id: number, status: boolean) => {
     setSurveyStatuses((prev) => ({ ...prev, [id]: status }))
-
     const { error } = await supabase
       .from('survey')
       .update({ status: status })
       .eq('id', id)
-
     if (error) {
       console.error('Error updating survey status:', error)
-      // Revert the local state if the update failed
       setSurveyStatuses((prev) => ({ ...prev, [id]: !status }))
     }
-  }
-
-  const paginatedSurveys = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return surveys.slice(startIndex, startIndex + itemsPerPage)
-  }, [currentPage, surveys])
-
-  const totalPages = Math.ceil(surveys.length / itemsPerPage)
-
-  const renderCell = (content: string, maxLength: number = 20) => {
-    if (content === null || content === undefined) {
-      return 'N/A'
-    }
-    if (content.length <= maxLength) {
-      return content
-    }
-    return (
-      <CellPopup content={content}>
-        <span className="cursor-pointer">{content.slice(0, maxLength)}...</span>
-      </CellPopup>
-    )
   }
 
   const handleSelectSurvey = (id: number) => {
     setSelectedSurveys((prev) =>
       prev.includes(id)
         ? prev.filter((surveyId) => surveyId !== id)
-        : [...prev, id],
+        : [...prev, id]
     )
   }
 
@@ -90,7 +91,7 @@ const SurveyPage = () => {
 
   const exportSelectedSurveys = () => {
     const selectedSurveyData = surveys.filter((survey) =>
-      selectedSurveys.includes(survey.id),
+      selectedSurveys.includes(survey.id)
     )
     const csvContent = [
       ['ID', 'Name', 'Date', 'Link', 'Target Org', 'Active'],
@@ -119,23 +120,23 @@ const SurveyPage = () => {
   }
 
   const deleteSelectedSurveys = async () => {
-    if (selectedSurveys.length === 0) {
-      return
-    }
-
+    if (selectedSurveys.length === 0) return
     setSelectedSurveys([])
   }
 
-  useEffect(() => {
-    if (surveys.length > 0) {
-      setSurveyStatuses(
-        surveys.reduce(
-          (acc, survey) => ({ ...acc, [survey.id]: survey.status }),
-          {},
-        ),
-      )
+  const renderCell = (content: string, maxLength: number = 20) => {
+    if (content === null || content === undefined) {
+      return 'N/A'
     }
-  }, [surveys])
+    if (content.length <= maxLength) {
+      return content
+    }
+    return (
+      <CellPopup content={content}>
+        <span className="cursor-pointer">{content.slice(0, maxLength)}...</span>
+      </CellPopup>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -162,6 +163,11 @@ const SurveyPage = () => {
               <input
                 type="text"
                 placeholder="Search for content..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1)
+                }}
                 className="w-full rounded-md border py-2 pl-3 pr-10 dark:bg-gray-700"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -230,10 +236,18 @@ const SurveyPage = () => {
                         onChange={() => handleStatusChange(survey.id, true)}
                       />
                       <span
-                        className={`flex h-6 w-6 cursor-pointer items-center justify-center ${surveyStatuses[survey.id] ? 'bg-green-500' : 'bg-gray-200'}`}
+                        className={`flex h-6 w-6 cursor-pointer items-center justify-center ${
+                          surveyStatuses[survey.id]
+                            ? 'bg-green-500'
+                            : 'bg-gray-200'
+                        }`}
                       >
                         <Check
-                          className={`h-4 w-4 ${surveyStatuses[survey.id] ? 'text-white' : 'text-transparent'}`}
+                          className={`h-4 w-4 ${
+                            surveyStatuses[survey.id]
+                              ? 'text-white'
+                              : 'text-transparent'
+                          }`}
                         />
                       </span>
                     </label>
@@ -245,10 +259,18 @@ const SurveyPage = () => {
                         onChange={() => handleStatusChange(survey.id, false)}
                       />
                       <span
-                        className={`flex h-6 w-6 cursor-pointer items-center justify-center ${!surveyStatuses[survey.id] ? 'bg-red-500' : 'bg-gray-200'}`}
+                        className={`flex h-6 w-6 cursor-pointer items-center justify-center ${
+                          !surveyStatuses[survey.id]
+                            ? 'bg-red-500'
+                            : 'bg-gray-200'
+                        }`}
                       >
                         <X
-                          className={`h-4 w-4 ${!surveyStatuses[survey.id] ? 'text-white' : 'text-transparent'}`}
+                          className={`h-4 w-4 ${
+                            !surveyStatuses[survey.id]
+                              ? 'text-white'
+                              : 'text-transparent'
+                          }`}
                         />
                       </span>
                     </label>
