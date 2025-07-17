@@ -160,11 +160,15 @@ BEGIN
         email = 'employee@example.com'
     WHERE id = employee_uuid;
 
-    -- Insert Notes
-    INSERT INTO Notes (textrange, note_content, topic_id, employee_id, is_public, is_approved_cbh, is_approved_emp, created_at, updated_at)
-    VALUES 
-        (ARRAY[0, 5], 'First public note', 1, employee_uuid, TRUE, TRUE, TRUE, NOW(), NOW()),
-        (ARRAY[6, 15], 'Private note', 1, employee_uuid, FALSE, FALSE, FALSE, NOW(), NOW());
+    -- Insert Notes with extended schema
+    INSERT INTO Notes (textrange, note_content, topic_id, employee_id, is_public, is_approved_cbh, is_approved_emp, address, quote, note_type, view_count, like_count, article_link, created_at, updated_at)
+    VALUES
+        (ARRAY[0, 5], 'I love this topic! It really helped me understand the concepts better.', 1, employee_uuid, TRUE, TRUE, TRUE, 'Topic 1, Item 2', NULL, 'public', 15, 3, NULL, NOW(), NOW()),
+        (ARRAY[6, 15], 'This is my private note for later reference.', 1, employee_uuid, FALSE, FALSE, FALSE, 'Topic 1, Item 3', NULL, 'private', 0, 0, NULL, NOW(), NOW()),
+        (ARRAY[16, 25], 'Great article about workplace communication!', 2, employee_uuid, TRUE, TRUE, TRUE, 'Communication Resources', NULL, 'shared-article', 42, 8, 'https://example.com/communication-guide', NOW(), NOW()),
+        (ARRAY[26, 35], 'This quote really resonates with me in my daily work.', 1, employee_uuid, TRUE, FALSE, TRUE, 'Topic 1, Item 4', 'Success is not final, failure is not fatal: it is the courage to continue that counts.', 'under-review', 5, 1, NULL, NOW(), NOW()),
+        (ARRAY[36, 45], 'Adding my thoughts on this discussion.', 3, employee_uuid, FALSE, FALSE, FALSE, 'Discussion Thread #123', NULL, 'comment', 0, 0, NULL, NOW(), NOW()),
+        (ARRAY[46, 55], 'I found this article very insightful and practical.', 2, employee_uuid, TRUE, TRUE, TRUE, 'Resource Library', NULL, 'article', 28, 6, 'https://example.com/leadership-tips', NOW(), NOW());
 
     -- Insert TopicProgress
     INSERT INTO TopicProgress (topic_id, employee_id, content_id, created_at, updated_at)

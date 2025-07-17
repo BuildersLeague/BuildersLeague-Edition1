@@ -8,12 +8,13 @@
  * you don't want to deal with this.
  */
 
-const { TextDecoder, TextEncoder, ReadableStream } = require('node:util')
+const { TextDecoder, TextEncoder, ReadableStream, TransformStream } = require('node:util')
 
 Object.defineProperties(globalThis, {
   TextDecoder: { value: TextDecoder },
   TextEncoder: { value: TextEncoder },
   ReadableStream: { value: ReadableStream },
+  TransformStream: { value: TransformStream },
 })
 
 const { Blob, File } = require('node:buffer')
