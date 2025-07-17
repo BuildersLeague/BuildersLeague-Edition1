@@ -25,7 +25,7 @@ interface ScheduleTrimmed {
 }
 
 export default function MenuDrawer() {
-  const [topics, setTopics] = useState<[] | null>(null)
+  const [topics, setTopics] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,28 +36,22 @@ export default function MenuDrawer() {
     try {
       setLoading(true)
 
-      let data: any = { docs: [] }
+      // Add timeout to prevent long loading times
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-      try {
-        const response = await fetch(`/api/topics`, {
-          cache: 'no-cache',
-        })
+      const response = await fetch(`/api/topics`, {
+        cache: 'force-cache', // Use cache instead of no-cache
+        signal: controller.signal,
+      })
 
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`)
-        }
+      clearTimeout(timeoutId)
 
-        data = await response.json()
-
-        // Ensure data.docs exists
-        if (!data.docs) {
-          data.docs = []
-        }
-      } catch (error) {
-        console.error('Failed to fetch topics:', error)
-        // Use mock data as fallback
-        data = { docs: mockTopics || [] }
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
       }
+
+      const data = await response.json()
 
       const supabase = createBrowserClient()
 
@@ -95,17 +89,13 @@ export default function MenuDrawer() {
               .filter(Boolean)
           }
         } catch (error) {
-          console.error('Failed to fetch schedules:', error)
+          console.warn('Failed to fetch schedules:', error)
         }
       }
 
-      // Filter topics based on schedules, with error handling
+      // Ensure data.docs exists and is an array
       if (data.docs && Array.isArray(data.docs)) {
         data.docs = data.docs.filter((topic: any) => {
-          if (!schedules || !Array.isArray(schedules)) {
-            return true
-          }
-
           const schedule_item = schedules.find(
             (schedule: ScheduleTrimmed) => schedule.topic_id === topic.id,
           )
@@ -116,12 +106,15 @@ export default function MenuDrawer() {
           }
           return true
         })
+        setTopics(data.docs)
+      } else {
+        // Fallback to mock data if API response is invalid
+        setTopics(mockTopics)
       }
-
-      setTopics(data.docs || [])
     } catch (error) {
-      console.error('Error in getTopics:', error)
-      setTopics([])
+      console.warn('Failed to fetch topics, using mock data:', error)
+      // Use mock data as fallback
+      setTopics(mockTopics)
     } finally {
       setLoading(false)
     }
@@ -149,7 +142,7 @@ export default function MenuDrawer() {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center p-8">
-                <p className="text-gray-500">Loading topics...</p>
+                <div className="text-sm text-gray-500">Loading topics...</div>
               </div>
             ) : topics && topics.length > 0 ? (
               topics.map((topic: any) => (
@@ -172,8 +165,8 @@ export default function MenuDrawer() {
                 </div>
               ))
             ) : (
-              <div className="flex items-center justify-center p-8">
-                <p className="text-gray-500">No topics available</p>
+              <div className="p-8 text-center text-sm text-gray-500">
+                No topics available
               </div>
             )}
           </div>
