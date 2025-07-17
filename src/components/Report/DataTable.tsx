@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 
 import {
   ChevronLeftIcon,
@@ -42,11 +43,23 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
 
+  // function to handle going back
+  const handleGoBack = () => {
+    console.log('Go Back button clicked!')
+    try {
+      router.push('/cbh/about')
+      console.log('Navigating to /cbh/about')
+    } catch (error) {
+      console.error('Router failed:', error)
+      window.location.href = '/cbh/about'
+    }
+  }
   const table = useReactTable({
     data,
     columns,
@@ -77,6 +90,9 @@ export function DataTable<TData, TValue>({
           }}
         />
         <div className="flex gap-2">
+          <Button variant={'outline'} onClick={handleGoBack}>
+            Go Back
+          </Button>
           <Button variant={'outline'}>Export Selected</Button>
           <Button variant={'outline'}>Delete Selected</Button>
         </div>
