@@ -16,9 +16,9 @@ interface ScheduleTrimmed {
   schedule_at: number
 }
 export default async function Page() {
-  const apiUrl = process.env.CMS_API_URL
+  const apiUrl: string = process.env.CMS_API_URL as string
   const endpoint = `/topics`
-  const apiKey = process.env.CMS_API_KEY
+  const apiKey: string = process.env.CMS_API_KEY as string
   const response = await fetch(apiUrl + endpoint, {
     cache: 'no-cache',
     headers: {

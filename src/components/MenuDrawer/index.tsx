@@ -65,21 +65,21 @@ export default function MenuDrawer() {
         )
       }
     }
-
-    data.docs = data.docs.filter((topic: any) => {
-      const schedule_item = schedules.find(
-        (schedule: ScheduleTrimmed) => schedule.topic_id === topic.id,
-      )
-      if (schedule_item !== undefined) {
-        const now = Date.now()
-        const scheduleTime = new Date(schedule_item.schedule_at).getTime()
-        return scheduleTime < now
-      }
-      return true
-    })
-    setTopics(data.docs)
+    if (data) {
+      data.docs = data.docs?.filter((topic: any) => {
+        const schedule_item = schedules.find(
+          (schedule: ScheduleTrimmed) => schedule.topic_id === topic.id,
+        )
+        if (schedule_item !== undefined) {
+          const now = Date.now()
+          const scheduleTime = new Date(schedule_item.schedule_at).getTime()
+          return scheduleTime < now
+        }
+        return true
+      })
+      setTopics(data.docs)
+    }
   }
-
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>
